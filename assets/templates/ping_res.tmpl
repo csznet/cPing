@@ -1,0 +1,45 @@
+<html>
+<head>
+<script src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script>
+</head>
+				<body>
+					<form method="post">
+						<label>URL:</label>
+						<input type="text" name="url" value="{{.To}}"/>
+						<button type="submit">Go</button>
+					</form>
+					<h3>
+					Result
+					</h3>
+					<ul>
+					{{$T := .T}}
+					{{$S := .S}}
+					{{$To := .To}}
+                    	{{range .Client.List}}
+                    		<li>
+                    			Name: {{.Name}}
+                    			<p class="p-{{.Id}}">正在加载</p>
+                    			<div class="client-{{.Id}}"></div>
+                    		</li>
+                    		<script>
+                    			$.ajax({
+                    				url: "site/{{.Id}}?do=ping&s={{$S}}&t={{$T}}&to={{$To}}",
+                    				type: "GET",
+                    				success: function(data) {
+                    				if (data.status == true){
+                    				$(".p-{{.Id}}").text("成功");
+                    				}else{
+                    				$(".p-{{.Id}}").text("失败");
+                    				}
+                    					$(".client-{{.Id}}").html(data.result.replace(/\n/g, '<br>'));
+                    				},
+                    				error: function(xhr, status, error) {
+                    				$(".p-{{.Id}}").text("失败");
+                    				$(".client-{{.Id}}").text(error);
+                    				}
+                    			});
+                    		</script>
+                    	{{end}}
+                    </ul>
+				</body>
+			</html>

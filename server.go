@@ -120,11 +120,6 @@ func web() {
 			return
 		}
 	})
-	//http.HandleFunc("/ping", func(w http.ResponseWriter, r *http.Request) {
-	//	if r.Method == "GET" {
-	//		fmt.Fprint(w, "Ping:"+r.FormValue("to"))
-	//	}
-	//})
 
 	http.HandleFunc("/site/", func(w http.ResponseWriter, r *http.Request) {
 		_, data := getClient()
@@ -155,12 +150,29 @@ func web() {
 	http.HandleFunc("/ping", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "GET" {
 			// 显示页面
-			tmpl.ExecuteTemplate(w, "ping.tmpl", nil)
+			if r.FormValue("to") == "" {
+				tmpl.ExecuteTemplate(w, "ping.tmpl", nil)
+			} else {
+				_, client := getClient()
+				s := strconv.FormatInt(time.Now().Unix(), 10)
+				t := common.Sha(s + ServerToken)
+				data := struct {
+					To     string
+					Client conf.Client
+					S      string
+					T      string
+				}{
+					To:     r.FormValue("to"),
+					Client: client,
+					T:      t,
+					S:      s,
+				}
+				tmpl.ExecuteTemplate(w, "ping_res.tmpl", data)
+			}
+
 		} else if r.Method == "POST" {
 			// 处理表单提交
-			s := strconv.FormatInt(time.Now().Unix(), 10)
-			t := common.Sha(s + ServerToken)
-			url := "/site/01H4NX14RM0000000000000000?do=ping&s=" + s + "&t=" + t + "&to=" + r.FormValue("url")
+			url := "/ping?to=" + r.FormValue("url")
 			http.Redirect(w, r, url, http.StatusSeeOther)
 		}
 	})

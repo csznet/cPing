@@ -5,18 +5,18 @@ type ExRes struct {
 	Result string `json:"result"`
 }
 
+type ExReq struct {
+	To    string `json:"to"`
+	Token string `json:"token"`
+	Stamp string `json:"stamp"`
+}
+
 type Site struct {
 	Client string `json:"client"`
 	Server string `json:"server"`
 	Token  string `json:"token"`
 	Id     string `json:"id"`
 	Name   string `json:"name"`
-}
-
-type ExReq struct {
-	To    string `json:"to"`
-	Token string `json:"token"`
-	Stamp string `json:"stamp"`
 }
 
 type Client struct {
