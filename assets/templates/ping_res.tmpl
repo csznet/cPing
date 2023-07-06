@@ -15,31 +15,64 @@
 					{{$T := .T}}
 					{{$S := .S}}
 					{{$To := .To}}
-                    	{{range .Client.List}}
-                    		<li>
-                    			Name: {{.Name}}
-                    			<p class="p-{{.Id}}">正在加载</p>
-                    			<div class="client-{{.Id}}"></div>
-                    		</li>
-                    		<script>
-                    			$.ajax({
-                    				url: "site/{{.Id}}?do=ping&s={{$S}}&t={{$T}}&to={{$To}}",
-                    				type: "GET",
-                    				success: function(data) {
-                    				if (data.status == true){
-                    				$(".p-{{.Id}}").text("成功");
-                    				}else{
-                    				$(".p-{{.Id}}").text("失败");
-                    				}
-                    					$(".client-{{.Id}}").html(data.result.replace(/\n/g, '<br>'));
-                    				},
-                    				error: function(xhr, status, error) {
-                    				$(".p-{{.Id}}").text("失败");
-                    				$(".client-{{.Id}}").text(error);
-                    				}
-                    			});
-                    		</script>
-                    	{{end}}
+						{{ $counter := 1 }}
+						{{range .Client.List}}
+						<li>
+							Name: {{.Name}}
+							<div>Count: <p class="c-{{$counter}}" style="display: inline;">0</p></div>
+							<div>Loss: <p class="p-{{$counter}}" style="display: inline;">0</p>%</div>
+							<p class="all-loss-{{$counter}}" style="display: none;">0</p>
+							<a class="details-toggle-{{$counter}}" data-target="#d-{{$counter}}">details+</a>
+							<div id="d-{{$counter}}" style="display: none;">
+								<p class="s-{{$counter}}">Load</p>
+								<div class="client-{{$counter}}"></div>
+							</div>
+						</li>
+						<script>
+							for (var i = 0; i < 25; i++) {
+								$.ajax({
+									url: "site/{{.Id}}?do=ping&s={{$S}}&t={{$T}}&to={{$To}}",
+									type: "GET",
+									success: function(data) {
+										if (data.status == true) {
+											$(".s-{{$counter}}").text("Suc");
+											var count = parseInt($(".c-{{$counter}}").text());
+											var p = parseInt($(".p-{{$counter}}").text());
+											var allloss = parseInt($(".all-loss-{{$counter}}").text());
+											var packetLoss = parseInt(data.result.match(/(\d+)% packet loss/)[1]);
+											if ((packetLoss + p) !== 0) {
+												$(".all-loss-{{$counter}}").text(allloss+packetLoss);
+												$(".p-{{$counter}}").text((allloss+packetLoss) / (count + 1));
+											}
+										} else {
+											$(".s-{{$counter}}").text("Fail");
+											var p = parseInt($(".p-{{$counter}}").text());
+											var count = parseInt($(".c-{{$counter}}").text());
+											var allloss = parseInt($(".all-loss-{{$counter}}").text());
+											$(".all-loss-{{$counter}}").text(allloss+100);
+											$(".p-{{$counter}}").text((100 + allloss) / (count + 1));
+											console.log("计数："+count+"Loss："+p)
+										}
+										var count = parseInt($(".c-{{$counter}}").text());
+										$(".c-{{$counter}}").text(count + 1);
+										$(".client-{{$counter}}").append(data.result.replace(/\n/g, '<br>'));
+									},
+									error: function(xhr, status, error) {
+										$(".s-{{$counter}}").text("Fail");
+										$(".client-{{$counter}}").text(error);
+									}
+								});
+							}
+							$(".details-toggle-{{$counter}}").click(function() {
+								var target = $(this).data("target");
+								$(this).text(function(i, text) {
+									return text === "details+" ? "details-" : "details+";
+								});
+								$(target).toggle();
+							});
+						</script>
+						{{ $counter = add $counter 1 }}
+						{{end}}
                     </ul>
 				</body>
 			</html>

@@ -44,7 +44,7 @@ func Post(url string, data []byte) string {
 	return string(respData)
 }
 
-func StampPass(s string) bool {
+func StampPass(s string, d int64) bool {
 	// 将 req.Stamp 转换为 Unix 时间戳
 	t, err := strconv.ParseInt(s, 10, 64)
 	if err != nil {
@@ -55,7 +55,7 @@ func StampPass(s string) bool {
 	now := time.Now().Unix()
 	diff := now - t
 	// 判断差值是否小于 5 秒
-	if diff < 5 {
+	if diff < d {
 		return true
 	} else {
 		return false

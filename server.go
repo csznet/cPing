@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"cPing/assets"
 	"cPing/common"
 	"cPing/conf"
@@ -10,7 +9,6 @@ import (
 	"github.com/oklog/ulid"
 	"html/template"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"strconv"
@@ -53,37 +51,11 @@ func init() {
 func main() {
 	web()
 }
-func ttt() {
-	url := "http://127.0.0.1:7788/ping"
-	req := conf.ExReq{To: "127.0.0.1", Stamp: strconv.FormatInt(time.Now().Unix(), 10)}
-	req.Token = common.Sha(req.Stamp + SiteConf.Token)
-	// 构造 POST 请求的数据
-	data, err := json.Marshal(req)
-	if err != nil {
-		fmt.Println("Failed to marshal request data:", err)
-		return
-	}
-	body := bytes.NewBuffer(data)
-	// 发送 POST 请求
-	resp, err := http.Post(url, "application/json", body)
-	if err != nil {
-		fmt.Println("Failed to send POST request:", err)
-		return
-	}
-	defer resp.Body.Close()
 
-	// 读取响应数据
-	respData, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		fmt.Println("Failed to read response data:", err)
-		return
-	}
-
-	// 输出响应数据
-	fmt.Println(string(respData))
-}
 func web() {
-	tmpl := template.Must(template.New("").ParseFS(assets.Templates, "templates/*"))
+	tmpl := template.Must(template.New("").Funcs(template.FuncMap{
+		"add": add,
+	}).ParseFS(assets.Templates, "templates/*"))
 	http.HandleFunc("/reg", func(w http.ResponseWriter, r *http.Request) {
 		var req conf.Site
 		if r.Method == "POST" {
@@ -125,7 +97,7 @@ func web() {
 		_, data := getClient()
 		// 解析动态路径参数
 		id := r.URL.Path[len("/site/"):]
-		if common.Sha(r.FormValue("s")+ServerToken) == r.FormValue("t") && common.StampPass(r.FormValue("s")) {
+		if common.Sha(r.FormValue("s")+ServerToken) == r.FormValue("t") && common.StampPass(r.FormValue("s"), 200) {
 			// 在数据中查找对应的信息
 			for _, site := range data.List {
 				if site.Id == id {
@@ -178,6 +150,9 @@ func web() {
 	})
 	fmt.Println("Listening on :" + WebPort + "...")
 	http.ListenAndServe(":"+WebPort, nil)
+}
+func add(a, b int) int {
+	return a + b
 }
 
 //	func pingHandler(w http.ResponseWriter, r *http.Request) {
