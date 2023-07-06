@@ -1,5 +1,5 @@
 {
-  "mode": "client",
+  "name": "湖南电信",
   "server": "http://127.0.0.1:7789",
   "client": "http://127.0.0.1:7788",
   "token": "31586"

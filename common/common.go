@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
+	"time"
 )
 
 func Sha(encode string) string {
@@ -40,4 +42,22 @@ func Post(url string, data []byte) string {
 	}
 
 	return string(respData)
+}
+
+func StampPass(s string) bool {
+	// 将 req.Stamp 转换为 Unix 时间戳
+	t, err := strconv.ParseInt(s, 10, 64)
+	if err != nil {
+		// 处理转换失败的情况
+		return false
+	}
+	// 计算当前时间戳与 t 的差值
+	now := time.Now().Unix()
+	diff := now - t
+	// 判断差值是否小于 5 秒
+	if diff < 5 {
+		return true
+	} else {
+		return false
+	}
 }

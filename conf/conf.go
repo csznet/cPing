@@ -5,10 +5,12 @@ type ExRes struct {
 	Result string `json:"result"`
 }
 
-type Conf struct {
+type Site struct {
 	Client string `json:"client"`
 	Server string `json:"server"`
 	Token  string `json:"token"`
+	Id     string `json:"id"`
+	Name   string `json:"name"`
 }
 
 type ExReq struct {
@@ -18,5 +20,5 @@ type ExReq struct {
 }
 
 type Client struct {
-	List []Conf `json:"list"`
+	List []Site `json:"list"`
 }

@@ -2,10 +2,13 @@ package main
 
 import (
 	"bytes"
+	"cPing/assets"
 	"cPing/common"
 	"cPing/conf"
 	"encoding/json"
 	"fmt"
+	"github.com/oklog/ulid"
+	"html/template"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -14,8 +17,10 @@ import (
 	"time"
 )
 
-var SiteConf conf.Conf
+var SiteConf conf.Site
 var WebPort = "7789"
+
+const ServerToken = "csz.net"
 
 func init() {
 	// 读取配置文件
@@ -78,8 +83,9 @@ func ttt() {
 	fmt.Println(string(respData))
 }
 func web() {
+	tmpl := template.Must(template.New("").ParseFS(assets.Templates, "templates/*"))
 	http.HandleFunc("/reg", func(w http.ResponseWriter, r *http.Request) {
-		var req conf.Conf
+		var req conf.Site
 		if r.Method == "POST" {
 			// 读取响应数据
 			// 读取请求体
@@ -100,7 +106,7 @@ func web() {
 				return
 			}
 			time.Sleep(3 * time.Second)
-			if test(req.Client, req.Token) {
+			if do(req.Client+"/ping", "127.0.0.1", req.Token).Status {
 				fmt.Fprint(w, "Reg success")
 				fmt.Println("Reg success")
 				reg(req)
@@ -114,37 +120,96 @@ func web() {
 			return
 		}
 	})
+	//http.HandleFunc("/ping", func(w http.ResponseWriter, r *http.Request) {
+	//	if r.Method == "GET" {
+	//		fmt.Fprint(w, "Ping:"+r.FormValue("to"))
+	//	}
+	//})
 
+	http.HandleFunc("/site/", func(w http.ResponseWriter, r *http.Request) {
+		_, data := getClient()
+		// 解析动态路径参数
+		id := r.URL.Path[len("/site/"):]
+		if common.Sha(r.FormValue("s")+ServerToken) == r.FormValue("t") && common.StampPass(r.FormValue("s")) {
+			// 在数据中查找对应的信息
+			for _, site := range data.List {
+				if site.Id == id {
+					// 返回对应的信息
+					w.Header().Set("Content-Type", "application/json")
+					if r.FormValue("do") == "ping" {
+						json.NewEncoder(w).Encode(do(site.Client+"/ping", r.FormValue("to"), site.Token))
+					}
+					//json.NewEncoder(w).Encode(site)
+					return
+				}
+			}
+			// 如果未找到对应信息，返回404 Not Found
+			http.NotFound(w, r)
+		} else {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+
+	})
+
+	//Ping首页
+	http.HandleFunc("/ping", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "GET" {
+			// 显示页面
+			tmpl.ExecuteTemplate(w, "ping.tmpl", nil)
+		} else if r.Method == "POST" {
+			// 处理表单提交
+			s := strconv.FormatInt(time.Now().Unix(), 10)
+			t := common.Sha(s + ServerToken)
+			url := "/site/01H4NX14RM0000000000000000?do=ping&s=" + s + "&t=" + t + "&to=" + r.FormValue("url")
+			http.Redirect(w, r, url, http.StatusSeeOther)
+		}
+	})
 	fmt.Println("Listening on :" + WebPort + "...")
 	http.ListenAndServe(":"+WebPort, nil)
 }
 
-func test(url, token string) bool {
-	url = url + "/ping"
-	req := conf.ExReq{To: "127.0.0.1", Stamp: strconv.FormatInt(time.Now().Unix(), 10)}
+//	func pingHandler(w http.ResponseWriter, r *http.Request) {
+//		if r.Method == "GET" {
+//			// 显示页面
+//			tmpl := template.Must(template.ParseFiles("ping.html"))
+//			tmpl.Execute(w, nil)
+//		} else if r.Method == "POST" {
+//			// 处理表单提交
+//			s := strconv.FormatInt(time.Now().Unix(), 10)
+//			t := common.Sha(s + ServerToken)
+//			url := "/site/01H4NX14RM0000000000000000?do=ping&s=" + s + "&t=" + t + "&to=" + r.FormValue("url")
+//			http.Redirect(w, r, url, http.StatusSeeOther)
+//		}
+//	}
+func do(url, to, token string) conf.ExRes {
+	req := conf.ExReq{To: to, Stamp: strconv.FormatInt(time.Now().Unix(), 10)}
 	req.Token = common.Sha(req.Stamp + token)
+	var res conf.ExRes
+	res.Status = false
 	// 构造 POST 请求的数据
 	data, err := json.Marshal(req)
 	if err != nil {
 		fmt.Println("Failed to marshal request data:", err)
-		return false
+		return res
 	}
-	var res conf.ExRes
 	err = json.Unmarshal([]byte(common.Post(url, data)), &res)
 	if err != nil {
 		fmt.Println("Failed to unmarshal JSON data:", err)
-		return false
+		return res
 	}
 	// 输出响应数据
-	return res.Status
+	return res
 }
 
-func reg(site conf.Conf) {
+func reg(site conf.Site) {
 	var list conf.Client
 	// 判断是否存在 client.json 文件
 	if _, err := os.Stat("client.json"); os.IsNotExist(err) {
 		// 文件不存在，创建并写入数据
 		data := list
+		// 自动分配 ULID 作为 ID
+		id := ulid.MustNew(ulid.Now(), nil).String()
+		site.Id = id // 将新的 ID 存入 ID 字段中
 		data.List = append(data.List, site)
 		file, err := os.Create("client.json")
 		if err != nil {
@@ -195,6 +260,21 @@ func reg(site conf.Conf) {
 			fmt.Println("Failed to unmarshal JSON data:", err)
 			return
 		}
+
+		// 判断是否已存在相同的数据
+		for _, oldSite := range oldList.List {
+			if oldSite.Id != site.Id &&
+				oldSite.Client == site.Client &&
+				oldSite.Server == site.Server &&
+				oldSite.Token == site.Token {
+				fmt.Printf("Site already exists: %+v\n", oldSite.Id)
+				return
+			}
+		}
+
+		// 自动分配 ULID 作为 ID
+		id := ulid.MustNew(ulid.Now(), nil).String()
+		site.Id = id // 将新的 ID 存入 ID 字段中
 		oldList.List = append(oldList.List, site)
 		// 将更新后的 oldList 变量写入 client.json 文件中
 		file, err = os.Create("client.json")
@@ -217,6 +297,40 @@ func reg(site conf.Conf) {
 		}
 
 		fmt.Println("Site added to client.json")
-
 	}
+}
+func getClient() (error, conf.Client) {
+	file, err := os.Open("client.json")
+	var oldList conf.Client
+	if err != nil {
+		fmt.Println("Failed to open config file:", err)
+		return err, oldList
+	}
+	defer file.Close()
+
+	// 获取文件大小
+	stat, err := file.Stat()
+	if err != nil {
+		fmt.Println("Failed to get file size:", err)
+		return err, oldList
+	}
+
+	// 创建足够大的缓冲区
+	bytes := make([]byte, stat.Size())
+
+	// 读取文件内容到缓冲区
+	_, err = io.ReadFull(file, bytes)
+	if err != nil {
+		fmt.Println("Failed to read file:", err)
+		return err, oldList
+	}
+
+	// 解析 JSON 数据为 Client 类型的变量 oldList
+
+	err = json.Unmarshal(bytes, &oldList)
+	if err != nil {
+		fmt.Println("Failed to unmarshal JSON data:", err)
+		return err, oldList
+	}
+	return nil, oldList
 }
