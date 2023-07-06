@@ -4,7 +4,7 @@ on:
     types: [created,published]
 
 jobs:
-  build:
+  upload-release-asset:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -16,47 +16,29 @@ jobs:
       - name: Build
         run: make all
 
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1.0.0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Get Latest Release ID
+        id: get_latest_release
+        uses: actions/github-script@v4
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
-          draft: false
-          prerelease: false
+          script: |
+            const response = await github.repos.listReleases({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+            });
+            console.log(response.data[0].id);
 
       - name: Upload Server Binary
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-release-asset@v1
         with:
-          name: server
-          path: server.zip
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: server
+          asset_name: server
+          asset_content_type: application/octet-stream
 
       - name: Upload Client Binary
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-release-asset@v1
         with:
-          name: client
-          path: client.zip
-
-      - name: Add Server Binary to Release
-        id: upload_server_binary
-        uses: actions/upload-release-asset@v1.0.2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: server.zip
-          asset_name: server.zip
-          asset_content_type: application/zip
-
-      - name: Add Client Binary to Release
-        id: upload_client_binary
-        uses: actions/upload-release-asset@v1.0.2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: client.zip
-          asset_name: client.zip
-          asset_content_type: application/zip
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: client
+          asset_name: client
+          asset_content_type: application/octet-stream
