@@ -1,37 +1,62 @@
-name: Release Go
+name: Go Build and Release
 on:
-  workflow_dispatch:
   release:
     types: [created,published]
 
 jobs:
-  build-go-binary:
+  build:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        goos: [linux, darwin]
-        goarch: [amd64, arm64]
-        exclude:
-          - goarch: arm64
-            goos: windows
     steps:
-      - name: Build server binary
-        uses: actions/checkout@v3
-      - uses: wangyoucao577/go-release-action@v1.36
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup Go
+        uses: actions/setup-go@v2
+
+      - name: Build
+        run: make all
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          goos: ${{ matrix.goos }}
-          goarch: ${{ matrix.goarch }}
-          goversion: go.mod
-          project_path: "server.go"
-          binary_name: "Server"
-      - name: Build client binary
-        uses: actions/checkout@v3
-      - uses: wangyoucao577/go-release-action@v1.36
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+
+      - name: Upload Server Binary
+        uses: actions/upload-artifact@v2
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          goos: ${{ matrix.goos }}
-          goarch: ${{ matrix.goarch }}
-          goversion: go.mod
-          project_path: "client.go"
-          binary_name: "Client"
+          name: server
+          path: server.zip
+
+      - name: Upload Client Binary
+        uses: actions/upload-artifact@v2
+        with:
+          name: client
+          path: client.zip
+
+      - name: Add Server Binary to Release
+        id: upload_server_binary
+        uses: actions/upload-release-asset@v1.0.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: server.zip
+          asset_name: server.zip
+          asset_content_type: application/zip
+
+      - name: Add Client Binary to Release
+        id: upload_client_binary
+        uses: actions/upload-release-asset@v1.0.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: client.zip
+          asset_name: client.zip
+          asset_content_type: application/zip
