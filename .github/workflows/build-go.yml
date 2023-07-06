@@ -2,7 +2,7 @@ name: Release Go
 on:
   workflow_dispatch:
   release:
-    types: [created,published] # 表示在创建新的 Release 时触发
+    types: [created,published]
 
 jobs:
   build-go-binary:
@@ -15,24 +15,23 @@ jobs:
           - goarch: arm64
             goos: windows
     steps:
-      - name: Server
-      - uses: actions/checkout@v3
+      - name: Build server binary
+        uses: actions/checkout@v3
       - uses: wangyoucao577/go-release-action@v1.36
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }} # 一个默认的变量，用来实现往 Release 中添加文件
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           goos: ${{ matrix.goos }}
           goarch: ${{ matrix.goarch }}
-          goversion: go.mod # 可以指定编译使用的 Golang 版本
+          goversion: go.mod
           project_path: "server.go"
-          binary_name: "Server" # 可以指定二进制文件的名称
-          
-      - name: Client
-      - uses: actions/checkout@v3
+          binary_name: "Server"
+      - name: Build client binary
+        uses: actions/checkout@v3
       - uses: wangyoucao577/go-release-action@v1.36
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }} # 一个默认的变量，用来实现往 Release 中添加文件
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           goos: ${{ matrix.goos }}
           goarch: ${{ matrix.goarch }}
-          goversion: go.mod # 可以指定编译使用的 Golang 版本
+          goversion: go.mod
           project_path: "client.go"
-          binary_name: "Client" # 可以指定二进制文件的名称
+          binary_name: "Client"
