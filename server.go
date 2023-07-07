@@ -97,15 +97,13 @@ func web() {
 		_, data := getClient()
 		// 解析动态路径参数
 		id := r.URL.Path[len("/site/"):]
-		if common.Sha(r.FormValue("s")+ServerToken) == r.FormValue("t") && common.StampPass(r.FormValue("s"), 200) {
+		if common.Sha(r.FormValue("s")+ServerToken) == r.FormValue("t") && common.StampPass(r.FormValue("s"), 20) {
 			// 在数据中查找对应的信息
 			for _, site := range data.List {
 				if site.Id == id {
 					// 返回对应的信息
 					w.Header().Set("Content-Type", "application/json")
-					if r.FormValue("do") == "ping" {
-						json.NewEncoder(w).Encode(do(site.Client+"/ping", r.FormValue("to"), site.Token))
-					}
+					json.NewEncoder(w).Encode(do(site.Client+"/"+r.FormValue("do"), r.FormValue("to"), site.Token))
 					//json.NewEncoder(w).Encode(site)
 					return
 				}
