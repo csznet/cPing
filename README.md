@@ -31,3 +31,20 @@ cPing
     }
 
 `server`为服务端地址，`client`为客户端地址，`token`为客户端密钥
+
+docker使用
+==
+
+拉取镜像  
+
+    docker pull csznet/cping:latest
+
+启动服务端  
+
+    docker run -d -p 7789:7789 --env mode=server csznet/cping:latest
+
+启动客户端  
+
+    docker run -d -p 7788:7788 --env mode=client -v $(pwd)/c.json:/app/conf.json csznet/cping:latest
+
+其中`-v $(pwd)/c.json:/app/conf.json`代表将当前目录下的`c.json`作为客户端配置文件
