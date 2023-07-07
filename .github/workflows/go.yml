@@ -60,8 +60,8 @@ jobs:
         with:
           name: artifacts
           path: |
-            ./server
-            ./client
+            ./server.zip
+            ./client.zip
           
   build_and_push_docker_image:
     runs-on: ubuntu-latest
