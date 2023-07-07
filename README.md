@@ -1,6 +1,13 @@
 cPing
 ----
 
+简介
+==
+
+多地Ping、MTR部署工具，需要先运行Server端再运行Client端，客户端自动注册到服务端
+
+截图
+==
 ![image](https://github.com/csznet/cPing/assets/127601663/e86f8c29-8192-4d3e-9447-2ce5d030babd)
 ![image](https://github.com/csznet/cPing/assets/127601663/8c8ecb6e-21c3-4627-a2a5-bf93222b8164)
 ![image](https://github.com/csznet/cPing/assets/127601663/219bbff7-99ee-4404-9721-6a93e79a5bf0)
