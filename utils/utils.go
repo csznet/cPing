@@ -23,6 +23,19 @@ func ExPing(to string) conf.ExRes {
 	return res
 }
 
+func ExMtr(to string) conf.ExRes {
+	res := conf.ExRes{}
+	result, err := MTR(to)
+	if err != nil {
+		res.Status = false
+		res.Result = fmt.Sprintf("Error:", err)
+	} else {
+		res.Status = true
+		res.Result = "MTR result:\n" + result
+	}
+	return res
+}
+
 func Ping(address string) (string, error) {
 	// 解析域名，获取IP
 	ips, err := net.LookupIP(address)

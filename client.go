@@ -54,8 +54,48 @@ func main() {
 
 func web(wg *sync.WaitGroup) {
 	http.HandleFunc("/mtr", func(w http.ResponseWriter, r *http.Request) {
-		mtr, _ := utils.MTR(r.FormValue("to"))
-		fmt.Fprint(w, mtr)
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		var req conf.ExReq
+		if r.Method == "GET" {
+			req.To = r.FormValue("to")
+			req.Stamp = r.FormValue("stamp")
+			req.Token = r.FormValue("token")
+		} else {
+			// 读取响应数据
+			// 读取请求体
+			var body []byte
+			var err error
+			if r.ContentLength > 0 {
+				body = make([]byte, r.ContentLength)
+				_, err = io.ReadFull(r.Body, body)
+				if err != nil {
+					fmt.Println("Failed to read request body:", err)
+					return
+				}
+			}
+			// 解析响应数据
+			err = json.Unmarshal(body, &req)
+			if err != nil {
+				fmt.Println("Failed to unmarshal response data:", err)
+				return
+			}
+		}
+		if common.Sha(req.Stamp+SiteConf.Token) == req.Token && common.StampPass(req.Stamp, 5) {
+			// 将 Person 实例转换为 JSON 格式的字符串
+			jsonBytes, err := json.Marshal(utils.ExMtr(req.To))
+			if err != nil {
+				fmt.Println("Failed to encode person:", err)
+				return
+			}
+			response := string(jsonBytes)
+			// 发送响应消息
+			fmt.Fprint(w, response)
+			return
+		} else {
+			fmt.Fprint(w, "error")
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
 	})
 	http.HandleFunc("/ping", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
