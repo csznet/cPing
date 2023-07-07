@@ -15,39 +15,10 @@ import (
 	"time"
 )
 
-var SiteConf conf.Site
 var WebPort = "7789"
 
 const ServerToken = "csz.net"
 
-func init() {
-	// 读取配置文件
-	file, err := os.Open("conf.json")
-	if err != nil {
-		fmt.Println("Failed to open config file:", err)
-		return
-	}
-	defer file.Close()
-	// 获取文件大小
-	stat, err := file.Stat()
-	if err != nil {
-		fmt.Println("Failed to get file size:", err)
-		return
-	}
-	// 解析配置文件
-	// 分配足够的空间来存储文件内容
-	bytes := make([]byte, stat.Size())
-	_, err = io.ReadFull(file, bytes)
-	if err != nil {
-		fmt.Println("Failed to read file:", err)
-		return
-	}
-	err = json.Unmarshal(bytes, &SiteConf)
-	if err != nil {
-		fmt.Println("Failed to parse config file:", err)
-		return
-	}
-}
 func main() {
 	web()
 }
