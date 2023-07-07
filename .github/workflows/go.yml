@@ -6,6 +6,7 @@ on:
 
 jobs:
   build_and_upload_assets:
+    permissions: write-all
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
