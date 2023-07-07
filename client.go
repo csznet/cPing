@@ -80,7 +80,7 @@ func web(wg *sync.WaitGroup) {
 				return
 			}
 		}
-		if common.Sha(req.Stamp+SiteConf.Token+req.To) == req.Token && common.StampPass(req.Stamp, 5) {
+		if common.Sha(req.Stamp+SiteConf.Token+req.To) == req.Token && common.StampPass(req.Stamp, 100) {
 			// 将 Person 实例转换为 JSON 格式的字符串
 			jsonBytes, err := json.Marshal(utils.ExMtr(req.To))
 			if err != nil {
@@ -124,7 +124,7 @@ func web(wg *sync.WaitGroup) {
 				return
 			}
 		}
-		if common.Sha(req.Stamp+SiteConf.Token+req.To) == req.Token && common.StampPass(req.Stamp, 5) {
+		if common.Sha(req.Stamp+SiteConf.Token+req.To) == req.Token && common.StampPass(req.Stamp, 100) {
 			// 将 Person 实例转换为 JSON 格式的字符串
 			jsonBytes, err := json.Marshal(utils.ExPing(req.To))
 			if err != nil {
