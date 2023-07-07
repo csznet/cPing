@@ -6,8 +6,10 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -60,4 +62,23 @@ func StampPass(s string, d int64) bool {
 	} else {
 		return false
 	}
+}
+
+// IsExternal 判断输入是否正确
+func IsExternal(host string) bool {
+	if !strings.Contains(host, ".") {
+		return false
+	}
+
+	ip := net.ParseIP(host)
+	if ip != nil && !ip.IsGlobalUnicast() {
+		return false
+	}
+
+	if ip != nil && ip.IsPrivate() {
+		return false
+	}
+
+	_, err := net.LookupHost(host)
+	return err == nil
 }

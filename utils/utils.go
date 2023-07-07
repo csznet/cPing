@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"cPing/common"
 	"cPing/conf"
 	"errors"
 	"fmt"
@@ -12,27 +13,37 @@ import (
 func ExPing(to string) conf.ExRes {
 	//ping
 	res := conf.ExRes{}
-	result, err := Ping(to)
-	if err != nil {
-		res.Status = false
-		res.Result = fmt.Sprintf("Error:", err)
+	if common.IsExternal(to) {
+		result, err := Ping(to)
+		if err != nil {
+			res.Status = false
+			res.Result = fmt.Sprintf("Error:", err)
+		} else {
+			res.Status = true
+			res.Result = "Ping result:\n" + result
+		}
 	} else {
-		res.Status = true
-		res.Result = "Ping result:\n" + result
+		res.Status = false
 	}
+
 	return res
 }
 
 func ExMtr(to string) conf.ExRes {
 	res := conf.ExRes{}
-	result, err := MTR(to)
-	if err != nil {
-		res.Status = false
-		res.Result = fmt.Sprintf("Error:", err)
+	if common.IsExternal(to) {
+		result, err := MTR(to)
+		if err != nil {
+			res.Status = false
+			res.Result = fmt.Sprintf("Error:", err)
+		} else {
+			res.Status = true
+			res.Result = "Ping result:\n" + result
+		}
 	} else {
-		res.Status = true
-		res.Result = "MTR result:\n" + result
+		res.Status = false
 	}
+
 	return res
 }
 
