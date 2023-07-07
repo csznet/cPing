@@ -78,7 +78,7 @@ func web() {
 				return
 			}
 			time.Sleep(3 * time.Second)
-			if do(req.Client+"/ping", "127.0.0.1", req.Token).Status {
+			if do(req.Client+"/ping", "baidu.com", req.Token).Status {
 				fmt.Fprint(w, "Reg success")
 				fmt.Println("Reg success")
 				reg(req)
