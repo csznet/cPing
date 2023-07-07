@@ -49,12 +49,13 @@ func web() {
 				return
 			}
 			time.Sleep(3 * time.Second)
-			if do(req.Client+"/ping", "baidu.com", req.Token).Status {
+			test := do(req.Client+"/ping", "baidu.com", req.Token)
+			if test.Status {
 				fmt.Fprint(w, "Reg success")
 				fmt.Println("Reg success")
 				reg(req)
 			} else {
-				fmt.Fprint(w, "Reg fail")
+				fmt.Fprint(w, "Reg fail:\n"+test.Result)
 				fmt.Println("Reg fail")
 			}
 		} else {
@@ -124,19 +125,6 @@ func add(a, b int) int {
 	return a + b
 }
 
-//	func pingHandler(w http.ResponseWriter, r *http.Request) {
-//		if r.Method == "GET" {
-//			// 显示页面
-//			tmpl := template.Must(template.ParseFiles("ping.html"))
-//			tmpl.Execute(w, nil)
-//		} else if r.Method == "POST" {
-//			// 处理表单提交
-//			s := strconv.FormatInt(time.Now().Unix(), 10)
-//			t := common.Sha(s + ServerToken)
-//			url := "/site/01H4NX14RM0000000000000000?do=ping&s=" + s + "&t=" + t + "&to=" + r.FormValue("url")
-//			http.Redirect(w, r, url, http.StatusSeeOther)
-//		}
-//	}
 func do(url, to, token string) conf.ExRes {
 	req := conf.ExReq{To: to, Stamp: strconv.FormatInt(time.Now().Unix(), 10)}
 	req.Token = common.Sha(req.Stamp + token + req.To)

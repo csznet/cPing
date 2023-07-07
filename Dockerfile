@@ -1,9 +1,9 @@
 # 使用官方的 Ubuntu 基础镜像
 FROM ubuntu:latest
 
-# 安装必要的依赖
+# 安装必要的依赖，包括 ping 和 mtr 工具
 RUN apt-get update && \
-    apt-get install -y net-tools iproute2 procps
+    apt-get install -y net-tools iproute2 procps iputils-ping mtr
 
 # 将编译好的 server 和 client 二进制文件复制到容器中
 COPY server /app/server
