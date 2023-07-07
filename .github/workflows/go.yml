@@ -1,0 +1,48 @@
+name: Go
+
+on:
+  release:
+    types: [ "created" ]
+
+jobs:
+  build_and_upload_assets:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.20
+
+      - name: Build server and client
+        run: |
+          go build -o server server.go
+          go build -o client client.go
+
+      - name: Zip server and client
+        run: |
+          sudo apt-get install -y zip
+          zip server.zip server
+          zip client.zip client
+
+      - name: Upload server asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./server.zip
+          asset_name: server.zip
+          asset_content_type: application/zip
+
+      - name: Upload client asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./client.zip
+          asset_name: client.zip
+          asset_content_type: application/zip
