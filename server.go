@@ -97,7 +97,7 @@ func web() {
 		_, data := getClient()
 		// 解析动态路径参数
 		id := r.URL.Path[len("/site/"):]
-		if common.Sha(r.FormValue("s")+ServerToken) == r.FormValue("t") && common.StampPass(r.FormValue("s"), 20) {
+		if common.Sha(r.FormValue("s")+ServerToken+r.FormValue("to")) == r.FormValue("t") && common.StampPass(r.FormValue("s"), 20) {
 			// 在数据中查找对应的信息
 			for _, site := range data.List {
 				if site.Id == id {
@@ -125,7 +125,7 @@ func web() {
 			} else {
 				_, client := getClient()
 				s := strconv.FormatInt(time.Now().Unix(), 10)
-				t := common.Sha(s + ServerToken)
+				t := common.Sha(s + ServerToken + r.FormValue("to"))
 				data := struct {
 					To     string
 					Client conf.Client
@@ -168,7 +168,7 @@ func add(a, b int) int {
 //	}
 func do(url, to, token string) conf.ExRes {
 	req := conf.ExReq{To: to, Stamp: strconv.FormatInt(time.Now().Unix(), 10)}
-	req.Token = common.Sha(req.Stamp + token)
+	req.Token = common.Sha(req.Stamp + token + req.To)
 	var res conf.ExRes
 	res.Status = false
 	// 构造 POST 请求的数据

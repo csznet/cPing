@@ -24,7 +24,7 @@
 							<div>Count: <p class="c-{{$counter}}" style="display: inline;">0</p></div>
 							<div>Loss: <p class="p-{{$counter}}" style="display: inline;">0</p>%</div>
 							<p class="all-loss-{{$counter}}" style="display: none;">0</p>
-							<a class="mtr-toggle-{{$counter}}" data-target="#mtr-{{$counter}}">MTR+</a>
+							<a class="mtr-toggle-{{$counter}}" data-target="#mtr-{{$counter}}">MTR=</a>
 							<a class="details-toggle-{{$counter}}" data-target="#d-{{$counter}}">details+</a>
 							<div id="mtr-{{$counter}}" style="display: none;">
 								Loading
@@ -74,6 +74,14 @@
 									if (data.status == true){
 										var htmlTable = mtrToTable(data.result);
 										$("#mtr-{{$counter}}").html(htmlTable);
+										$(".mtr-toggle-{{$counter}}").text("MTR+");
+										$(".mtr-toggle-{{$counter}}").click(function() {
+											var target = $(this).data("target");
+											$(this).text(function(i, text) {
+												return text === "MTR+" ? "MTR-" : "MTR+";
+											});
+											$(target).toggle();
+										});
 									}else{
 										$("#mtr-{{$counter}}").text("Fail");
 									}
@@ -120,13 +128,6 @@
 								var target = $(this).data("target");
 								$(this).text(function(i, text) {
 									return text === "details+" ? "details-" : "details+";
-								});
-								$(target).toggle();
-							});
-							$(".mtr-toggle-{{$counter}}").click(function() {
-								var target = $(this).data("target");
-								$(this).text(function(i, text) {
-									return text === "MTR+" ? "MTR-" : "MTR+";
 								});
 								$(target).toggle();
 							});
