@@ -12,6 +12,11 @@ cPing
 
     go build server.go
 
+或者直接Make编译，进入cPing目录后  
+  
+    
+    Make
+
 
 使用
 ==
