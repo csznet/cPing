@@ -53,6 +53,10 @@ func main() {
 }
 
 func web(wg *sync.WaitGroup) {
+	http.HandleFunc("/mtr", func(w http.ResponseWriter, r *http.Request) {
+		mtr, _ := utils.MTR(r.FormValue("to"))
+		fmt.Fprint(w, mtr)
+	})
 	http.HandleFunc("/ping", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		var req conf.ExReq

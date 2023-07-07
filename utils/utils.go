@@ -2,6 +2,7 @@ package utils
 
 import (
 	"cPing/conf"
+	"errors"
 	"fmt"
 	"net"
 	"os/exec"
@@ -34,12 +35,36 @@ func Ping(address string) (string, error) {
 	// 根据操作系统构建ping命令
 	var cmd *exec.Cmd
 	if runtime.GOOS == "windows" {
-		cmd = exec.Command("ping", "-n", "4", ip)
+		cmd = exec.Command("ping", "-w", "5000", "-n", "4", ip)
 	} else {
-		cmd = exec.Command("ping", "-c", "4", ip)
+		cmd = exec.Command("ping", "-w", "5", "-c", "4", ip)
 	}
 
 	// 执行ping命令
+	output, err := cmd.Output()
+	if err != nil {
+		return "", err
+	}
+
+	return string(output), nil
+}
+
+func MTR(address string) (string, error) {
+	// 检查 mtr 是否已安装
+	_, err := exec.LookPath("mtr")
+	if err != nil {
+		return "", errors.New("mtr not found, please install it")
+	}
+
+	// 根据操作系统构建 mtr 命令
+	var cmd *exec.Cmd
+	if runtime.GOOS == "windows" {
+		cmd = exec.Command("mtr.exe", "--report", "--report-cycles", "4", address)
+	} else {
+		cmd = exec.Command("mtr", "--report", "--report-cycles", "4", address)
+	}
+
+	// 执行 mtr 命令
 	output, err := cmd.Output()
 	if err != nil {
 		return "", err
